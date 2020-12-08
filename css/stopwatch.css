@@ -69,18 +69,3 @@ body {
   background: #f1f1f1;
   color: #333;
 }
-
-/* graphs */
-.graph-container {
-  display: inline;
-}
-text {
-  font-family: inherit !important;
-  fill: #444;
-}
-.dimple-axis-group path {
-  stroke: #666 !important;
-}
-.dimple-axis-group line {
-  stroke: #666 !important;
-}
