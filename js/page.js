@@ -6,6 +6,7 @@ var pTime = $('#time');
 var pMs = $('#ms');
 var details = $('#details');
 var sum = $('#sum');
+var docTitle = document.title;
 
 // state
 var started = false;
@@ -25,6 +26,7 @@ $(document).ready(function() {
 function observer(text, ms) {
     pTime.text(text);
     pMs.text(ms);
+    document.title = text;
 }
 var sw = new Stopwatch(observer);
 
@@ -50,6 +52,7 @@ function pause() {
     btnStart.text('resume'); 
     btnStart.one('click', resume);
     updPct();
+    document.title += ' [paused]';
     details.html(details.html() + '-' + timeStr(date()));
 }
 
@@ -58,6 +61,7 @@ function resume() {
     btnStart.text('pause'); 
     btnStart.one('click', pause);
     updPct();
+    document.title = document.title.slice(0,' [paused]'.length * -1);
     details.html(details.html() + '<br>' + timeStr(date()));
 }
 
@@ -70,6 +74,7 @@ function clear() {
         btnStart.off('click', resume);
         details.text('');
         sum.text('');
+	document.title = docTitle;
         started = false;
     }
 }
