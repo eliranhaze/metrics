@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>stopwatch</title>
+    <title>metrics</title>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -42,9 +42,8 @@
         <div class="panel-body" style="text-align: center;">
           <div class="form-inline">
             <div id="upd-frm" class="form-group" style="display: none;">
-              <input id="title" class="form-control" placeholder="title" size=50 maxlength=100>
-              <select class="form-control" id="type">
-              </select>
+              <input id="title" class="form-control" placeholder="title" size=45 maxlength=100>
+              <input id="category" class="form-control" placeholder="category" size=15 maxlength=50>
               <button id="update" class="btn btn-default">update</button>
               <div>
                 <table class="table table-condensed stats-table">
@@ -59,10 +58,22 @@
                     <tr>
                   </thead>
                   <tbody>
-                    <tr><td>total hours</td><td id="total-hours"></td></tr>
-                    <tr><td>month hours</td><td id="month-hours"></td></tr>
-                    <tr><td>week hours</td><td id="week-hours"></td></tr>
-                    <tr><td>day hours</td><td id="day-hours"></td></tr>
+                    <tr><td>total</td><td id="total-hours"></td></tr>
+                    <tr><td>month</td><td id="month-hours"></td></tr>
+                    <tr><td>week</td><td id="week-hours"></td></tr>
+                    <tr><td>day</td><td id="day-hours"></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div>
+                <table class="table table-condensed stats-table">
+                  <thead>
+                    <tr id="metrics-head-row">
+                    </tr>
+                    <tr id="metrics-btn-row">
+                    </tr>
+                  </thead>
+                  <tbody id="metrics-body">
                   </tbody>
                 </table>
               </div>

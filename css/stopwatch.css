@@ -30,6 +30,10 @@ body {
     margin-top: 15px;
 }
 
+.metrics-cell {
+    text-align: center;
+}
+
 /* highlighting */
 
 @keyframes glowGood {

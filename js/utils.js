@@ -36,7 +36,7 @@ function todayStr() {
     var d = zeropad(today.getDate());
     var m = zeropad(today.getMonth()+1);
     var y = zeropad(today.getYear());
-    return d + '/' + m + '/' + y;
+    return m + '/' + d + '/' + y; // american time format fot sheets
 }
 
 ///////////////////////////////////////////////////////////////

@@ -1,12 +1,12 @@
-// stopwatch client id
-var CLIENT_ID = '920239214134-9hgqb8jm5jdag9vpnuc1ohn7dljh3vql.apps.googleusercontent.com';
+// metrics oauth client id
+var CLIENT_ID = '920239214134-ktpv8aljjqo654usd56tfumkatfolgku.apps.googleusercontent.com';
 
 // api stuff
 var DISCOVERY_DOCS = ["https://sheets.googleapis.com/$discovery/rest?version=v4"];
 var SCOPES = "https://www.googleapis.com/auth/spreadsheets";
 
-// intellecting spreadsheet id
-var SPREADSHEET_ID = '1vdCniswTZHnMOgVZe3GS_tzvZtgctes1OkPKCD8LP4o';
+// metrics spreadsheet id
+var SPREADSHEET_ID = '1O5jxu3OARmucV18CX2rk2AkTahZSgca29qZL4vcZ2QU';
 
 var btnLogin = $('#login');
 var btnLogout = $('#logout');
@@ -15,7 +15,7 @@ var frmUpdate = $('#upd-frm');
 var btnUpdate = $('#update');
 var btnRefresh = $('#refresh');
 var txtTitle = $('#title');
-var selType = $('#type');
+var txtCategory = $('#category');
 var pInit = $('#init');
 var tTotalHours = $('#total-hours');
 var tMonthHours = $('#month-hours');
@@ -83,31 +83,73 @@ function initSignedIn() {
 
 function loadItems() {
 
-    // add category options if empty
-    if (selType.find('option').length == 0) {
-        read('Categories!A2:A', function(values) {
-            for (i = 0; i < values.length; i++) {
-                selType.append($("<option />").text(values[i]));
+    // fetch metrics data
+    read('Summary!A8:H12', function(values) {
+	// save previous metrics for comparison
+	var prevMetrics = [];
+	$('#metrics-body tr').each(function() {
+	    var row = [];
+	    prevMetrics.push(row);
+	    $('td', this).each(function() {
+                row.push(parseFloat($(this).html()));
+	    });
+	});
+	// clear table
+	$('#metrics-head-row').empty();
+	$('#metrics-btn-row').empty();
+	$('#metrics-body').empty();
+	// add headers
+	var btnIdx = 0;
+	for (value of values[0]) {
+	    $('#metrics-head-row').append('<th>' + value.toLowerCase() + '</th>');
+	    var btnHtml = "";
+	    var btnId = `metric-btn-${btnIdx}`;
+	    if (value != "") {
+		btnHtml = `<button type="button" class="btn btn-default btn-xs" id="${btnId}">+1</button>`;
+	    }
+	    $('#metrics-btn-row').append(`<td class="metrics-cell">${btnHtml}</td>`)
+	    if (btnHtml) {
+		$(`#${btnId}`).click(new Function(`updateMetrics(${btnIdx})`));
+		$(`#${btnId}`).on('click', function() {$(`#${btnId}`).blur()});
             }
-        });
-    }
+            btnIdx++;
+	}
+	// add rest of table
+	var count = 1;
+	for (row of values.slice(1)) {
+	    var rowid = `metrics-row-${count}`;
+	    $('#metrics-body').append(`<tr id="${rowid}"></tr>`)
+	    for (cell of row) {
+	        $(`#${rowid}`).append('<td class="metrics-cell">' + cell.toLowerCase() + '</td>')
+	    }
+	    count++;
+	}
+	// compare to previous
+	if (prevMetrics.length > 0) {
+	    var row = 0;
+	    $('#metrics-body tr').each(function() {
+    	    var col = 0;
+	        $('td', this).each(function() {
+                    if (parseFloat($(this).html()) > prevMetrics[row][col]) {
+		        highlight($(this), 'good');
+		    }
+		    col++;
+	        });
+	        row++;
+	    });
+	}
+    });
+    read('Summary!A1:B5', function(values) {
+        var totalHours = values[4][1]; // B5
+        var totalStr = `${totalHours}h`;
+        var monthHours = values[3][1]; // B4
+        var monthStr = `${monthHours}h`;
+        var weekHours =  values[2][1]; // B3
+        var weekStr = `${weekHours}h`;
+        var dayHours =  values[1][1]; // B2
+        var dayStr = `${dayHours}h`;
 
-    read('Data!A1:B8', function(values) {
-	    // TODO: generate rows and their labels from the data instead of having them hardcoded
-        var totalHours = values[0][1]; // B1
-        var totalUtil = values[1][1]; // B2
-        var totalStr = `${totalHours}h (${totalUtil})`;
-        var monthHours = values[2][1]; // B3
-        var monthUtil = values[3][1]; // B4
-        var monthStr = `${monthHours}h (${monthUtil})`;
-        var weekHours =  values[4][1]; // B5
-        var weekUtil =  values[5][1]; // B6
-        var weekStr = `${weekHours}h (${weekUtil})`;
-        var dayHours =  values[6][1]; // B7
-        var dayUtil =  values[7][1]; // B8
-        var dayStr = `${dayHours}h (${dayUtil})`;
-
-	// get previous stats
+	// get previous stats (those displayed on page)
 	var prevStats = {};
 	for (item of statItems) {
 	   if (item.html() != "") {
@@ -130,27 +172,28 @@ function loadItems() {
 	       if (cur > prev) {
 	           highlight(item, 'good');
 	       } else if (cur < prev) {
-	           highlight(item, 'bad');
+	           //highlight(item, 'bad');
+		   continue; // don't highlight bad
 	       }
 	   }
 	}
     });
 
     // fetch items for autocomplete (start later for some efficiency)
-    read('Log!A1800:C', function(values) {
+    read('Hours!A2:C', function(values) {
         var titles = new Set(); // for autocomplete
-        var today = date();
-        for (i = 0; i < values.length; i++) {
-            var row = values[i];
-            var itemDate = parseDate(row[0]);
-            // autocomplete
-            if (daysDiff(today, itemDate) < 14) {
-                titles.add(row[2]);
-            }
+        var categories = new Set();
+        var rows = values.slice(-20); // take just the last entries
+        for (row of rows) {
+	       titles.add(row[2]);
+	       categories.add(row[1]);
         }
-        log('adding ' + titles.size + ' titles to autocomplete');
+        log(`adding ${titles.size} titles and ${categories.size} categories to autocomplete`);
         txtTitle.autocomplete({
             source: Array.from(titles)
+        });
+        txtCategory.autocomplete({
+            source: Array.from(categories)
         });
     });
 }
@@ -165,27 +208,7 @@ function highlight(element, type) {
 
 function clearForm() {
     txtTitle.val('');
-    selType.removeAttr('selected');
-}
-
-function pct(x, y) {
-    return (100*x/y).toFixed(1) + '%';
-}
-
-function parseDate(str) {
-    var spl = str.split('/');
-    var d = spl[0];
-    var m = parseInt(spl[1]) - 1; // zero indexed
-    var y = '20' + spl[2];
-    return new Date(y, m, d);
-}
-
-function daysDiff(date1, date2) {
-    return hoursDiff(date1, date2)/24;
-}
-
-function hoursDiff(date1, date2) {
-    return (date1 - date2)/1000/60/60;
+    txtCategory.val('');
 }
 
 function log(message) {
@@ -197,14 +220,14 @@ function refresh() {
 }
 
 function update() {
-    var type = selType.val();
+    var category = txtCategory.val();
     var name = txtTitle.val();
     var value = (sw.minutes()/60).toFixed(2);
     if (name == '' || value == 0) {
         log('not adding: ' + name + ', ' + value);
         return;
     }
-    updateLog(type, name, value, function() {
+    updateLog(category, name, value, function() {
         clearForm();
         clearTime();
         loadItems();
@@ -216,7 +239,7 @@ function updateLog(type, name, value, then) {
     log('adding: ' + row);
     gapi.client.sheets.spreadsheets.values.append({
         spreadsheetId: SPREADSHEET_ID,
-        range: 'Log!A:D',
+        range: 'Hours!A:D',
         values: [row],
         valueInputOption: 'USER_ENTERED',
     }).then(function(response) {
@@ -225,6 +248,30 @@ function updateLog(type, name, value, then) {
         log('added ' + updates['updatedRows'] + ' rows at ' + updates['updatedRange']);
         then();
     }, handleError);
+}
+
+function updateMetrics(index) { 
+    // start by fetching current value and row num for update
+    read('Summary!A14:H15', function(values) {
+        var rownum = values[0][1]; //B14
+	var val = values[1][index];
+	if (!val) val = 0;
+	var newVal = parseInt(val) + 1;
+        var col = String.fromCharCode('A'.charCodeAt() + index);
+	var cell = `${col}${rownum}`
+        log(`updating ${cell} with ${newVal}`);
+        gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `Log!${cell}`,
+            values: [[newVal]],
+            valueInputOption: 'USER_ENTERED',
+        }).then(function(response) {
+            var updates = JSON.parse(response.body);
+            log(updates);
+            log('updated ' + updates['updatedCells'] + ' cells at ' + updates['updatedRange']);
+	    loadItems();
+        }, handleError);
+    });
 }
 
 function read(range, then) {
