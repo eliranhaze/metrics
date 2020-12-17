@@ -165,10 +165,11 @@ function loadItems() {
 
 	// compare stats for highlights
 	for (item of statItems) {
-	   var prev = prevStats[item[0].id];
-	   if (prev) {
+	   var itemId = item[0].id;
+	   if (itemId in prevStats) {
+	       var prev = prevStats[itemId];
 	       var cur = parseFloat(item.html());
-	       log('cur for ' + item[0].id + ' is ' + cur);
+	       log('cur for ' + itemId + ' is ' + cur);
 	       if (cur > prev) {
 	           highlight(item, 'good');
 	       } else if (cur < prev) {
